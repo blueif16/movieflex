@@ -1,19 +1,20 @@
 'use client'
 
 import Image from 'next/image'
-import { Play, Plus, Star } from 'lucide-react'
+import { Play, Plus, Star, ImageIcon } from 'lucide-react'
 import { useState } from 'react'
 
 interface MovieThumbnailProps {
   imageUrl: string
   title: string
-  genre: string
-  id: string
+  genres: string[]
   rating: number
+  release_date: string
 }
 
-export default function MovieThumbnail({ imageUrl, title, genre, id, rating }: MovieThumbnailProps) {
+export default function MovieThumbnail({ imageUrl, title, genres, rating, release_date }: MovieThumbnailProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   return (
     <div 
@@ -21,33 +22,52 @@ export default function MovieThumbnail({ imageUrl, title, genre, id, rating }: M
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Image
-        src={imageUrl}
-        alt={title}
-        fill
-        className="rounded-sm object-cover md:rounded"
-      />
-      
-      {isHovered && (
-        <div className="absolute inset-0 bg-black/70 rounded-sm md:rounded">
-          <div className="flex flex-col justify-center items-center h-full space-y-3">
-            <h3 className="text-white text-lg font-bold text-center px-2">{title}</h3>
-            <div className="flex items-center space-x-2">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <p className="text-yellow-400">{rating.toFixed(1)}</p>
-            </div>
-            <p className="text-gray-300 text-sm">{genre}</p>
-            <div className="flex space-x-3">
-              <button className="flex items-center bg-white text-black rounded-full p-2 hover:bg-gray-200">
-                <Play className="w-6 h-6" />
-              </button>
-              <button className="flex items-center bg-gray-600/70 text-white rounded-full p-2 hover:bg-gray-600">
-                <Plus className="w-6 h-6" />
-              </button>
-            </div>
+      <div className="relative w-full h-full">
+        {imageError ? (
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center rounded-sm md:rounded">
+            <ImageIcon className="w-12 h-12 text-gray-400" />
+          </div>
+        ) : (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="rounded-sm object-cover md:rounded"
+            onError={() => setImageError(true)}
+            sizes="(max-width: 768px) 150px, 200px"
+            priority={false}
+          />
+        )}
+        
+        {/* Hover Overlay */}
+        <div 
+          className={`absolute inset-0 bg-black/70 rounded-sm md:rounded transition-opacity duration-200
+            flex flex-col justify-center items-center space-y-3 z-10
+            ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+        >
+          <h3 className="text-white text-lg font-bold text-center px-2">{title}</h3>
+          <div className="flex items-center space-x-2">
+            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+            <p className="text-yellow-400">{rating.toFixed(1)}</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-1 px-2">
+            {genres.slice(0, 2).map((genre) => (
+              <span key={genre} className="text-gray-300 text-xs bg-gray-800/50 px-2 py-1 rounded">
+                {genre}
+              </span>
+            ))}
+          </div>
+          <p className="text-gray-400 text-xs">{new Date(release_date).getFullYear()}</p>
+          <div className="flex space-x-3">
+            <button className="flex items-center bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors">
+              <Play className="w-6 h-6" />
+            </button>
+            <button className="flex items-center bg-gray-600/70 text-white rounded-full p-2 hover:bg-gray-600 transition-colors">
+              <Plus className="w-6 h-6" />
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 } 

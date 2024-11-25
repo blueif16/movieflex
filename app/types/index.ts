@@ -1,9 +1,11 @@
 export interface Movie {
-  id: string
   title: string
   imageUrl: string
-  genre: string
+  release_date: string
+  genres: string[]
   rating: number
+  language: string[]
+  country: string[]
 }
 
 export interface SearchResponse {
@@ -21,6 +23,6 @@ export interface MoviesResponse {
 
 export interface SearchParams {
   query: string
-  genre?: string
+  genres?: string[]
   page?: number
 } 

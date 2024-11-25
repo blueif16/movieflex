@@ -5,7 +5,7 @@ const API_BASE_URL = 'http://localhost:5000/api'
 export async function searchMovies(params: SearchParams): Promise<SearchResponse> {
   const queryParams = new URLSearchParams({
     query: params.query,
-    ...(params.genre && { genre: params.genre }),
+    ...(params.genres && { genres: params.genres.join(',') }),
     ...(params.page && { page: params.page.toString() })
   })
 

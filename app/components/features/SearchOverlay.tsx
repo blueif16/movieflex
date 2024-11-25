@@ -37,7 +37,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         try {
           const response = await searchMovies({
             query,
-            genre: selectedGenre || undefined
+            genres: selectedGenre ? [selectedGenre] : undefined
           })
           setResults(response.results)
         } catch (error) {
@@ -97,7 +97,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {results.map((movie) => (
-                <MovieThumbnail key={movie.id} {...movie} />
+                <MovieThumbnail key={movie.title} {...movie} />
               ))}
             </div>
           )}
