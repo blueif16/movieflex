@@ -8,14 +8,20 @@ from movie_database import MovieDatabase
 app = Flask(__name__)
 CORS(app)
 
-db = MovieDatabase("imdb_movies-1.csv")
+# Get the absolute path to the database file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(current_dir, "imdb_movies-1.csv")
+
+# Initialize database with absolute path
+db = MovieDatabase(db_path)
 MOVIES = db.get_list()
 GENRES = db.get_all_genres()
 
 def find_poster(movie_title: str) -> str:
     """Find poster file path for a given movie title"""
     sanitized_title = sanitize_filename(movie_title)
-    poster_pattern = os.path.join('posters', f"{sanitized_title}_*.png")
+    poster_dir = os.path.join(current_dir, 'posters')
+    poster_pattern = os.path.join(poster_dir, f"{sanitized_title}_*.png")
     matching_files = glob.glob(poster_pattern)
     
     if matching_files:

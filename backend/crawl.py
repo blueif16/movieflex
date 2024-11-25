@@ -39,14 +39,16 @@ def get_movie_poster(movie_name):
             image_url = f"{IMAGE_BASE_URL}{poster_path}"
             image_response = requests.get(image_url)
             if image_response.status_code == 200:
-                # Ensure the directory exists
-                os.makedirs('posters', exist_ok=True)
+                # Get the directory of the current script
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                poster_dir = os.path.join(current_dir, 'posters')
                 
-                # Sanitize the movie name for the filename
+                # Create posters directory if it doesn't exist
+                os.makedirs(poster_dir, exist_ok=True)
+                
+                # Use absolute path for saving
                 sanitized_name = sanitize_filename(movie_name)
-                
-                # Use the movie's ID to ensure uniqueness and prevent overwriting
-                file_path = os.path.join('posters', f"{sanitized_name}_{movie['id']}.png")
+                file_path = os.path.join(poster_dir, f"{sanitized_name}_{movie['id']}.png")
                 
                 with open(file_path, 'wb') as f:
                     f.write(image_response.content)

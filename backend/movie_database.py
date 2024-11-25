@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 class Movie(): #creating a movie class
     def __init__(self, title, release_date, genres, vote_average, spoken_languages, production_countries):
@@ -43,8 +44,14 @@ class Movie(): #creating a movie class
 
 class MovieDatabase():
     def __init__(self, path):
-        # df = pd.read_csv('imdb_movies-1.csv')
-        self.movie_data = self.get_movie_data(pd.read_csv(path))
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Database file not found: {path}")
+            
+        try:
+            df = pd.read_csv(path)
+            self.movie_data = self.get_movie_data(df)
+        except Exception as e:
+            raise Exception(f"Error loading database: {str(e)}")
 
     def __len__(self):
         return len(self.movie_data)
