@@ -7,20 +7,24 @@ from movie_database import MovieDatabase
 
 app = Flask(__name__)
 
-# More permissive CORS settings for development
+# CORS settings
 CORS(app, resources={
     r"/api/*": {
-        "origins": "*",  # Allow all origins in development
+        "origins": "*",
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
 })
 
-# Get the absolute path to the database file
+# Get absolute paths using os.path for cross-platform compatibility
 current_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(current_dir, "imdb_movies-1.csv")
+posters_dir = os.path.join(current_dir, "posters")
 
-# Initialize database with absolute path
+# Create posters directory if it doesn't exist
+os.makedirs(posters_dir, exist_ok=True)
+
+# Initialize database
 db = MovieDatabase(db_path)
 MOVIES = db.get_list()
 GENRES = db.get_all_genres()
@@ -36,27 +40,41 @@ def health_check():
 
 def find_poster(movie_title: str) -> str:
     """Find poster file path for a given movie title"""
-    sanitized_title = sanitize_filename(movie_title)
-    poster_dir = os.path.join(current_dir, 'posters')
-    poster_pattern = os.path.join(poster_dir, f"{sanitized_title}_*.png")
-    matching_files = glob.glob(poster_pattern)
-    
-    if matching_files:
-        return matching_files[0]
-    return None
+    try:
+        sanitized_title = sanitize_filename(movie_title)
+        poster_pattern = os.path.join(posters_dir, f"{sanitized_title}_*.png")
+        matching_files = glob.glob(poster_pattern)
+        
+        print(f"Searching for poster: {poster_pattern}")  # Debug log
+        print(f"Found files: {matching_files}")  # Debug log
+        
+        if matching_files:
+            return matching_files[0]
+        return None
+    except Exception as e:
+        print(f"Error finding poster: {str(e)}")  # Debug log
+        return None
 
 @app.route('/api/poster/<path:movie_title>')
 def get_movie_poster_image(movie_title):
-    poster_path = find_poster(movie_title)
-    
-    if not poster_path:
-        get_movie_poster(movie_title)
+    try:
+        print(f"Requesting poster for: {movie_title}")  # Debug log
+        
         poster_path = find_poster(movie_title)
-    
-    if not poster_path:
-        return jsonify({'error': 'Poster not found'}), 404
-    
-    return send_file(poster_path, mimetype='image/png')
+        if not poster_path:
+            print(f"Poster not found, fetching from TMDB...")  # Debug log
+            get_movie_poster(movie_title)
+            poster_path = find_poster(movie_title)
+        
+        if not poster_path:
+            print(f"Failed to get poster for: {movie_title}")  # Debug log
+            return jsonify({'error': 'Poster not found'}), 404
+        
+        print(f"Serving poster from: {poster_path}")  # Debug log
+        return send_file(poster_path, mimetype='image/png')
+    except Exception as e:
+        print(f"Error serving poster: {str(e)}")  # Debug log
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/search', methods=['GET'])
 def search_movies():
@@ -128,5 +146,6 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
-    # Bind to all network interfaces
+    print(f"Database path: {db_path}")  # Debug log
+    print(f"Posters directory: {posters_dir}")  # Debug log
     app.run(host='0.0.0.0', port=5000, debug=True) 

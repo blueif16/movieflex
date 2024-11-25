@@ -21,32 +21,49 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [countries, setCountries] = useState<string[]>([])
   const [results, setResults] = useState<Movie[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [view, setView] = useState<'grid' | 'list'>('list')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadFilters = async () => {
+      if (!isOpen) return
+
+      setError(null)
       try {
         const [genresRes, languagesRes, countriesRes] = await Promise.all([
           getGenres(),
           getLanguages(),
           getCountries()
         ])
-        setGenres(genresRes.genres)
-        setLanguages(languagesRes.languages.sort((a, b) => a.localeCompare(b)))
-        setCountries(countriesRes.countries.sort((a, b) => a.localeCompare(b)))
-      } catch (error) {
-        console.error('Failed to load filters:', error)
+
+        // Sort arrays alphabetically
+        const sortedGenres = [...genresRes.genres].sort((a, b) => 
+          a.toLowerCase().localeCompare(b.toLowerCase())
+        )
+        const sortedLanguages = [...languagesRes.languages].sort((a, b) => 
+          a.toLowerCase().localeCompare(b.toLowerCase())
+        )
+        const sortedCountries = [...countriesRes.countries].sort((a, b) => 
+          a.toLowerCase().localeCompare(b.toLowerCase())
+        )
+
+        setGenres(sortedGenres)
+        setLanguages(sortedLanguages)
+        setCountries(sortedCountries)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load filters'
+        setError(errorMessage)
+        console.error('Failed to load filters:', err)
       }
     }
-    if (isOpen) {
-      loadFilters()
-    }
+
+    loadFilters()
   }, [isOpen])
 
   const handleSearch = async () => {
     if (!query && selectedGenres.length === 0 && !selectedLanguage && !selectedCountry) return
 
     setIsLoading(true)
+    setError(null)
     try {
       const response = await searchMovies({
         query,
@@ -55,8 +72,10 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         country: selectedCountry || undefined
       })
       setResults(response.results)
-    } catch (error) {
-      console.error('Search failed:', error)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Search failed'
+      setError(errorMessage)
+      console.error('Search failed:', err)
     } finally {
       setIsLoading(false)
     }
@@ -212,6 +231,13 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           ) : null}
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="text-red-500 text-center py-4">
+          {error}
+        </div>
+      )}
     </div>
   )
 } 

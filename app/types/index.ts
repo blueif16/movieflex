@@ -31,4 +31,8 @@ export interface LanguageResponse {
 
 export interface CountryResponse {
   countries: string[]
+}
+
+export interface MoviesResponse {
+  movies: Movie[]
 } 
