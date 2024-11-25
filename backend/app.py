@@ -6,7 +6,15 @@ from crawl import get_movie_poster, sanitize_filename
 from movie_database import MovieDatabase
 
 app = Flask(__name__)
-CORS(app)
+
+# More permissive CORS settings for development
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",  # Allow all origins in development
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Get the absolute path to the database file
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +24,15 @@ db_path = os.path.join(current_dir, "imdb_movies-1.csv")
 db = MovieDatabase(db_path)
 MOVIES = db.get_list()
 GENRES = db.get_all_genres()
+
+# Add health check endpoint
+@app.route('/api/health')
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'database_loaded': bool(MOVIES),
+        'genres_loaded': bool(GENRES)
+    })
 
 def find_poster(movie_title: str) -> str:
     """Find poster file path for a given movie title"""
@@ -103,5 +120,13 @@ def get_movies_by_genre(genre):
     movies = db.recommend_by_genre(genre)
     return jsonify({'movies': movies})
 
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 if __name__ == '__main__':
-    app.run(debug=True) 
+    # Bind to all network interfaces
+    app.run(host='0.0.0.0', port=5000, debug=True) 
