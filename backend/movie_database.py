@@ -1,0 +1,105 @@
+import pandas as pd
+
+class Movie(): #creating a movie class
+    def __init__(self, title, release_date, genres, vote_average, spoken_languages, production_countries):
+
+        self.title = title
+        self.imageUrl = f"/api/poster/{title}"
+        self.genres = self.parse_genres(genres)
+        self.rating = vote_average
+        self.release_date = release_date
+        self.language = self.parse_languages(spoken_languages)
+        self.country = self.parse_countries(production_countries)
+
+        #self.popularity = popularity
+        #self.spoken_languages = spoken_languages
+        #self.production_companies = production_companies
+    def display(self):
+        print(f"{self.title}, released in {self.release_date}, Genre: {self.genres}, Rating: {self.vote_average}")
+
+    def _to_dict(self):
+        return {
+            'title': self.title,
+            'imageUrl': self.imageUrl,
+            'release_date': self.release_date,
+            'genres': self.genres,
+            'rating': self.rating,
+            'language': self.language,
+            'country': self.country
+        }
+
+
+    def parse_genres(self, genres):
+    
+        return genres[2:-2].split("', '")
+
+    def parse_languages(self, languages):
+
+        return languages[2:-2].split("', '")
+
+    def parse_countries(self, countries):
+        return countries[2:-2].split("', '")
+
+
+class MovieDatabase():
+    def __init__(self, path):
+        # df = pd.read_csv('imdb_movies-1.csv')
+        self.movie_data = self.get_movie_data(pd.read_csv(path))
+
+    def __len__(self):
+        return len(self.movie_data)
+
+    def get_movie_data(self, df):
+        movie_data = []
+        for index, row in df.iterrows():
+            movie = Movie( title=row.get('title', 'Unknown Title'),
+                        release_date=row.get('release_date', 'Unknown Release Date'),
+                        genres=row.get('genres', "[]"),
+                        vote_average=row.get('vote_average', 0.0),
+                        spoken_languages=row.get('spoken_languages', "[]"),
+                        production_countries=row.get('production_countries', "[]"))
+            movie_data.append(movie)
+        return movie_data
+    
+    def get_list(self):
+        return [movie._to_dict() for movie in self.movie_data]
+
+    def recommend_by_rating(self, min_rating):
+        # print(f"\nMovie with ratings above {min_rating}: ")
+        movies = []
+        for movie in self.movie_data:
+            if movie.rating >= min_rating:
+                movies.append(movie)
+        
+        return self.sort_by_rating(movies)
+
+    def search_by_title(self, title):
+
+        return [movie._to_dict() for movie in self.movie_data if title.lower() in movie.title.lower()]
+
+    def recommend_by_genre(self, *genre):
+        # print(f"\nMovies with all genres: {', '.join(genre)}")
+        movies = []
+        for movie in self.movie_data:
+        # Check if the movie contains all the genres specified by the user
+            if all(g in movie.genres for g in genre):
+                movies.append(movie)
+
+        return self.sort_by_rating(movies)
+    
+    def sort_by_rating(self, movies: list[Movie], descending: bool = True) -> list[dict]:
+        """
+        Sorts the provided list of movies by rating.
+        If no list is provided, sorts all movies.
+        """
+        if movies is None:
+            return "No movies found"
+        sorted_movies = sorted(movies, key= lambda x: x.rating, reverse=descending)
+
+        return [movie._to_dict() for movie in sorted_movies]
+
+    def get_all_genres(self):
+        genres = set()
+        for movie in self.movie_data:
+            genres.update(set(movie.genres))
+        return list(genres)
