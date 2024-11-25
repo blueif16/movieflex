@@ -8,6 +8,14 @@ export interface Movie {
   country: string[]
 }
 
+export interface SearchParams {
+  query: string
+  genres?: string[]
+  language?: string
+  country?: string
+  page?: number
+}
+
 export interface SearchResponse {
   results: Movie[]
   total: number
@@ -17,12 +25,10 @@ export interface GenreResponse {
   genres: string[]
 }
 
-export interface MoviesResponse {
-  movies: Movie[]
+export interface LanguageResponse {
+  languages: string[]
 }
 
-export interface SearchParams {
-  query: string
-  genres?: string[]
-  page?: number
+export interface CountryResponse {
+  countries: string[]
 } 

@@ -87,6 +87,20 @@ class MovieDatabase():
 
         return self.sort_by_rating(movies)
     
+    def recommend_by_language(self, language):
+        movies = []
+        for movie in self.movie_data:
+            if language in movie.language:
+                movies.append(movie)
+        return self.sort_by_rating(movies)
+
+    def recommend_by_country(self, country):
+        movies = []
+        for movie in self.movie_data:
+            if country in movie.country:
+                movies.append(movie)
+        return self.sort_by_rating(movies)
+    
     
     
     def sort_by_rating(self, movies: list[Movie], descending: bool = True) -> list[dict]:
@@ -106,3 +120,15 @@ class MovieDatabase():
         for movie in self.movie_data:
             genres.update(set(movie.genres))
         return list(genres)
+
+    def get_all_languages(self):
+        languages = set()
+        for movie in self.movie_data:
+            languages.update(set(movie.language))
+        return list(languages)
+
+    def get_all_countries(self):
+        countries = set()
+        for movie in self.movie_data:
+            countries.update(set(movie.country))
+        return list(countries)

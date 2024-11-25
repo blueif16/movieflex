@@ -24,15 +24,12 @@ def find_poster(movie_title: str) -> str:
 
 @app.route('/api/poster/<path:movie_title>')
 def get_movie_poster_image(movie_title):
-    # Try to find existing poster
     poster_path = find_poster(movie_title)
     
-    # If poster doesn't exist, fetch it
     if not poster_path:
         get_movie_poster(movie_title)
         poster_path = find_poster(movie_title)
     
-    # If we still don't have a poster, return a default image or 404
     if not poster_path:
         return jsonify({'error': 'Poster not found'}), 404
     
@@ -41,37 +38,54 @@ def get_movie_poster_image(movie_title):
 @app.route('/api/search', methods=['GET'])
 def search_movies():
     query = request.args.get('query', '').lower()
-    genres = request.args.getlist('genres')  # Changed to getlist for multiple genres
+    genres = request.args.getlist('genres')
+    language = request.args.get('language')
+    country = request.args.get('country')
     page = int(request.args.get('page', 1))
     
-    # Combine search results
-    results = []
-    if query:
-        results.extend(db.search_by_title(query))
+    # Start with title search or all movies
+    results = db.search_by_title(query) if query else MOVIES
+
+    # Apply filters
     if genres:
-        results.extend(db.recommend_by_genre(*genres))
+        genre_results = db.recommend_by_genre(*genres)
+        genre_titles = {movie['title'] for movie in genre_results}
+        results = [movie for movie in results if movie['title'] in genre_titles]
+
+    if language:
+        language_results = db.recommend_by_language(language)
+        language_titles = {movie['title'] for movie in language_results}
+        results = [movie for movie in results if movie['title'] in language_titles]
+
+    if country:
+        country_results = db.recommend_by_country(country)
+        country_titles = {movie['title'] for movie in country_results}
+        results = [movie for movie in results if movie['title'] in country_titles]
+
+    # Sort final results by rating
+    results = sorted(results, key=lambda x: x['rating'], reverse=True)
     
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_results = []
-    for movie in results:
-        if movie['title'] not in seen:
-            seen.add(movie['title'])
-            unique_results.append(movie)
-    
-    # Implement pagination
+    # Pagination
     per_page = 20
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
     
     return jsonify({
-        'results': unique_results[start_idx:end_idx],
-        'total': len(unique_results)
+        'results': results[start_idx:end_idx],
+        'total': len(results)
     })
 
 @app.route('/api/genres', methods=['GET'])
 def get_genres():
     return jsonify({'genres': GENRES})
+
+@app.route('/api/languages', methods=['GET'])
+def get_languages():
+    return jsonify({'languages': db.get_all_languages()})
+
+@app.route('/api/countries', methods=['GET'])
+def get_countries():
+    return jsonify({'countries': db.get_all_countries()})
 
 @app.route('/api/movies/top-rated', methods=['GET'])
 def get_top_rated():

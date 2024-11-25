@@ -2,7 +2,7 @@
 
 import { Search, X, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { searchMovies, getGenres } from '@/app/lib/api'
+import { searchMovies, getGenres, getLanguages, getCountries } from '@/app/lib/api'
 import { Movie } from '@/app/types'
 import MovieThumbnail from './MovieThumbnail'
 
@@ -14,31 +14,45 @@ interface SearchOverlayProps {
 export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [query, setQuery] = useState('')
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
+  const [selectedLanguage, setSelectedLanguage] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState('')
   const [genres, setGenres] = useState<string[]>([])
+  const [languages, setLanguages] = useState<string[]>([])
+  const [countries, setCountries] = useState<string[]>([])
   const [results, setResults] = useState<Movie[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [view, setView] = useState<'grid' | 'list'>('list')
 
   useEffect(() => {
-    const loadGenres = async () => {
+    const loadFilters = async () => {
       try {
-        const response = await getGenres()
-        setGenres(response.genres)
+        const [genresRes, languagesRes, countriesRes] = await Promise.all([
+          getGenres(),
+          getLanguages(),
+          getCountries()
+        ])
+        setGenres(genresRes.genres)
+        setLanguages(languagesRes.languages.sort((a, b) => a.localeCompare(b)))
+        setCountries(countriesRes.countries.sort((a, b) => a.localeCompare(b)))
       } catch (error) {
-        console.error('Failed to load genres:', error)
+        console.error('Failed to load filters:', error)
       }
     }
-    loadGenres()
-  }, [])
+    if (isOpen) {
+      loadFilters()
+    }
+  }, [isOpen])
 
   const handleSearch = async () => {
-    if (!query && selectedGenres.length === 0) return
+    if (!query && selectedGenres.length === 0 && !selectedLanguage && !selectedCountry) return
 
     setIsLoading(true)
     try {
       const response = await searchMovies({
         query,
-        genres: selectedGenres.length > 0 ? selectedGenres : undefined
+        genres: selectedGenres.length > 0 ? selectedGenres : undefined,
+        language: selectedLanguage || undefined,
+        country: selectedCountry || undefined
       })
       setResults(response.results)
     } catch (error) {
@@ -69,10 +83,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-white">Search Movies</h2>
-          <button
-            onClick={onClose}
-            className="text-white hover:text-gray-300"
-          >
+          <button onClick={onClose} className="text-white hover:text-gray-300">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -99,77 +110,102 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             </button>
           </div>
 
-          {/* Genre Tags */}
-          <div className="flex flex-wrap gap-2">
-            {genres.map((genre) => (
-              <button
-                key={genre}
-                onClick={() => handleGenreToggle(genre)}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  selectedGenres.includes(genre)
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
+          {/* Filters Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Language Dropdown */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">
+                Language
+              </label>
+              <select
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                {genre}
-              </button>
-            ))}
+                <option value="">Any Language</option>
+                {languages.map((language) => (
+                  <option key={language} value={language}>
+                    {language}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Country Dropdown */}
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">
+                Country
+              </label>
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="">Any Country</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* View Toggle */}
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={() => setView('list')}
-              className={`text-sm ${view === 'list' ? 'text-red-500' : 'text-gray-400'}`}
-            >
-              List View
-            </button>
-            <button
-              onClick={() => setView('grid')}
-              className={`text-sm ${view === 'grid' ? 'text-red-500' : 'text-gray-400'}`}
-            >
-              Grid View
-            </button>
+          {/* Genre Tags */}
+          <div>
+            <label className="block text-white text-sm font-medium mb-2">
+              Genres
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {genres.map((genre) => (
+                <button
+                  key={genre}
+                  onClick={() => handleGenreToggle(genre)}
+                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                    selectedGenres.includes(genre)
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Results */}
+          {/* Results Section */}
           {isLoading ? (
             <div className="text-center text-white py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
               <p className="mt-4">Searching...</p>
             </div>
           ) : results.length > 0 ? (
-            view === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {results.map((movie) => (
-                  <MovieThumbnail key={movie.title} {...movie} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {results.map((movie) => (
-                  <div 
-                    key={movie.title}
-                    className="flex items-center justify-between bg-gray-900 p-4 rounded-lg hover:bg-gray-800 transition-colors"
-                  >
-                    <div>
-                      <h3 className="text-white font-semibold">{movie.title}</h3>
-                      <div className="flex items-center mt-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-yellow-400 ml-1">{movie.rating.toFixed(1)}</span>
-                        <span className="text-gray-400 ml-2">
-                          {movie.genres.slice(0, 3).join(', ')}
-                        </span>
-                      </div>
+            <div className="space-y-2">
+              {results.map((movie) => (
+                <div 
+                  key={movie.title}
+                  className="flex items-center justify-between bg-gray-900 p-4 rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  <div>
+                    <h3 className="text-white font-semibold">{movie.title}</h3>
+                    <div className="flex items-center mt-1">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <span className="text-yellow-400 ml-1">{movie.rating.toFixed(1)}</span>
+                      <span className="text-gray-400 ml-2">
+                        {movie.genres.slice(0, 3).join(', ')}
+                      </span>
                     </div>
-                    <span className="text-gray-400 text-sm">
-                      {new Date(movie.release_date).getFullYear()}
-                    </span>
+                    <div className="text-gray-400 text-sm mt-1">
+                      {movie.language[0]} • {movie.country[0]}
+                    </div>
                   </div>
-                ))}
-              </div>
-            )
-          ) : query || selectedGenres.length > 0 ? (
+                  <span className="text-gray-400 text-sm">
+                    {new Date(movie.release_date).getFullYear()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : query || selectedGenres.length > 0 || selectedLanguage || selectedCountry ? (
             <div className="text-center text-gray-400 py-12">
               No movies found matching your search criteria
             </div>
