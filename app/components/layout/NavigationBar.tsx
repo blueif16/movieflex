@@ -23,7 +23,7 @@ export default function NavigationBar() {
       }`}>
         <div className="px-4 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <h1 className="text-red-600 text-2xl font-bold">MOVIEFLEX</h1>
+            <h1 className="text-red-600 text-2xl font-bold">METFLIX</h1>
             <div className="hidden md:flex space-x-4">
               <Link href="/" className="text-white hover:text-gray-300">Home</Link>
               <Link href="/series" className="text-white hover:text-gray-300">TV Series</Link>

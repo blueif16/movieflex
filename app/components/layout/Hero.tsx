@@ -56,7 +56,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent">
         <div className="flex flex-col justify-center h-full max-w-2xl px-8 space-y-6">
           <h1 className="text-5xl md:text-7xl font-bold text-red-600">
-            MovieFlex
+            METFLIX
           </h1>
           <p className="text-xl text-gray-200 leading-relaxed">
             Your ultimate destination for discovering and exploring movies from around the world. 
