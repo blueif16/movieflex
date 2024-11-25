@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Play, Plus } from 'lucide-react'
+import { Play, Plus, Star } from 'lucide-react'
 import { useState } from 'react'
 
 interface MovieThumbnailProps {
@@ -9,9 +9,10 @@ interface MovieThumbnailProps {
   title: string
   genre: string
   id: string
+  rating: number
 }
 
-export default function MovieThumbnail({ imageUrl, title, genre, id }: MovieThumbnailProps) {
+export default function MovieThumbnail({ imageUrl, title, genre, id, rating }: MovieThumbnailProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -31,6 +32,10 @@ export default function MovieThumbnail({ imageUrl, title, genre, id }: MovieThum
         <div className="absolute inset-0 bg-black/70 rounded-sm md:rounded">
           <div className="flex flex-col justify-center items-center h-full space-y-3">
             <h3 className="text-white text-lg font-bold text-center px-2">{title}</h3>
+            <div className="flex items-center space-x-2">
+              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              <p className="text-yellow-400">{rating.toFixed(1)}</p>
+            </div>
             <p className="text-gray-300 text-sm">{genre}</p>
             <div className="flex space-x-3">
               <button className="flex items-center bg-white text-black rounded-full p-2 hover:bg-gray-200">

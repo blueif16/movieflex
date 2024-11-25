@@ -3,6 +3,7 @@ export interface Movie {
   title: string
   imageUrl: string
   genre: string
+  rating: number
 }
 
 export interface SearchResponse {
@@ -12,6 +13,10 @@ export interface SearchResponse {
 
 export interface GenreResponse {
   genres: string[]
+}
+
+export interface MoviesResponse {
+  movies: Movie[]
 }
 
 export interface SearchParams {
