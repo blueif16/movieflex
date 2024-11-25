@@ -87,6 +87,8 @@ class MovieDatabase():
 
         return self.sort_by_rating(movies)
     
+    
+    
     def sort_by_rating(self, movies: list[Movie], descending: bool = True) -> list[dict]:
         """
         Sorts the provided list of movies by rating.
@@ -97,6 +99,7 @@ class MovieDatabase():
         sorted_movies = sorted(movies, key= lambda x: x.rating, reverse=descending)
 
         return [movie._to_dict() for movie in sorted_movies]
+    
 
     def get_all_genres(self):
         genres = set()
