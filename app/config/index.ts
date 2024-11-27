@@ -10,7 +10,7 @@ declare global {
 
 // API Configuration
 export const API_CONFIG = {
-  PORT: process.env.NEXT_PUBLIC_API_PORT || '5000',
+  PORT: process.env.NEXT_PUBLIC_API_PORT || '3500',
   HOST: process.env.NEXT_PUBLIC_API_HOST || 'localhost',
   get BASE_URL() {
     return `http://${this.HOST}:${this.PORT}/api`

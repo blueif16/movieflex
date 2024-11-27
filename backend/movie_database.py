@@ -110,13 +110,18 @@ class MovieDatabase():
     
     
     
-    def sort_by_rating(self, movies: list[Movie], descending: bool = True) -> list[dict]:
+    def sort_by_rating(self, movies, descending: bool = True):
         """
         Sorts the provided list of movies by rating.
         If no list is provided, sorts all movies.
         """
         if movies is None:
             return "No movies found"
+        
+        movies = [movie for movie in movies if type(movie.rating) == float()]
+        # print([movie.rating for movie in movies])
+
+        # return
         sorted_movies = sorted(movies, key= lambda x: x.rating, reverse=descending)
 
         return [movie._to_dict() for movie in sorted_movies]
