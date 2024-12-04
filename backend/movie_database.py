@@ -2,13 +2,13 @@ import pandas as pd
 import os
 
 class Movie(): #creating a movie class
-    def __init__(self, title, release_date, genres, vote_average, spoken_languages, production_countries):
+    def __init__(self, title, release_year, genres, vote_average, spoken_languages, production_countries):
 
         self.title = title
         self.imageUrl = f"/api/poster/{title}"
         self.genres = self.parse_genres(genres)
         self.rating = vote_average
-        self.release_date = release_date
+        self.release_year = release_year
         self.language = self.parse_languages(spoken_languages)
         self.country = self.parse_countries(production_countries)
 
@@ -16,13 +16,13 @@ class Movie(): #creating a movie class
         #self.spoken_languages = spoken_languages
         #self.production_companies = production_companies
     def display(self):
-        print(f"{self.title}, released in {self.release_date}, Genre: {self.genres}, Rating: {self.vote_average}")
+        print(f"{self.title}, released in {self.release_year}, Genre: {self.genres}, Rating: {self.rating}")
 
     def _to_dict(self):
         return {
             'title': self.title,
             'imageUrl': self.imageUrl,
-            'release_date': self.release_date,
+            'release_year': self.release_year,
             'genres': self.genres,
             'rating': self.rating,
             'language': self.language,
@@ -40,7 +40,6 @@ class Movie(): #creating a movie class
 
     def parse_countries(self, countries):
         return countries[2:-2].split("', '")
-
 
 class MovieDatabase():
     def __init__(self, path):
@@ -107,8 +106,13 @@ class MovieDatabase():
             if country in movie.country:
                 movies.append(movie)
         return self.sort_by_rating(movies)
-    
-    
+
+    def recommend_by_year(self, year):
+        movies = []
+        for movie in self.movie_data:
+            if year in movie.year:
+                movies.append(movie)
+        return self.sort_by_rating(movies)
     
     def sort_by_rating(self, movies, descending: bool = True):
         """
@@ -126,7 +130,6 @@ class MovieDatabase():
 
         return [movie._to_dict() for movie in sorted_movies]
     
-
     def get_all_genres(self):
         genres = set()
         for movie in self.movie_data:
@@ -144,3 +147,9 @@ class MovieDatabase():
         for movie in self.movie_data:
             countries.update(set(movie.country))
         return list(countries)
+    
+    def get_all_year(self):
+        year = set()
+        for movie in self.movie_data:
+            year.update(set(movie.release_year))
+        return list(year)
