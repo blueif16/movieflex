@@ -148,4 +148,4 @@ def after_request(response):
 if __name__ == '__main__':
     print(f"Database path: {db_path}")  # Debug log
     print(f"Posters directory: {posters_dir}")  # Debug log
-    app.run(host='0.0.0.0', port=5000, debug=True) 
+    app.run(host='0.0.0.0', port=3500, debug=True) 

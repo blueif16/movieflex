@@ -13,6 +13,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",
     "next": "15.0.3",
+    "node": "^20.18.1",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "tailwind-merge": "^2.5.5",
@@ -27,5 +28,20 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
-  }
+  },
+  "description": "A Netflix-inspired movie discovery platform built with Next.js and Flask, allowing users to browse and search movies by genres, languages, and countries.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blueif16/movieflex.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blueif16/movieflex/issues"
+  },
+  "homepage": "https://github.com/blueif16/movieflex#readme"
 }
