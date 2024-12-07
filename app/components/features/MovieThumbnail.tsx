@@ -9,10 +9,10 @@ interface MovieThumbnailProps {
   title: string
   genres: string[]
   rating: number
-  release_date: string
+  release_year: string
 }
 
-export default function MovieThumbnail({ imageUrl, title, genres, rating, release_date }: MovieThumbnailProps) {
+export default function MovieThumbnail({ imageUrl, title, genres, rating, release_year }: MovieThumbnailProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
 
@@ -57,7 +57,7 @@ export default function MovieThumbnail({ imageUrl, title, genres, rating, releas
               </span>
             ))}
           </div>
-          <p className="text-gray-400 text-xs">{new Date(release_date).getFullYear()}</p>
+          <p className="text-gray-400 text-xs">{release_year}</p>
           <div className="flex space-x-3">
             <button className="flex items-center bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors">
               <Play className="w-6 h-6" />

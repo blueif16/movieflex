@@ -219,7 +219,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                     </div>
                   </div>
                   <span className="text-gray-400 text-sm">
-                    {new Date(movie.release_date).getFullYear()}
+                    {movie.release_year}
                   </span>
                 </div>
               ))}

@@ -1,7 +1,7 @@
 export interface Movie {
   title: string
   imageUrl: string
-  release_date: string
+  release_year: string
   genres: string[]
   rating: number
   language: string[]

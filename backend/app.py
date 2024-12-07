@@ -79,29 +79,36 @@ def get_movie_poster_image(movie_title):
 @app.route('/api/search', methods=['GET'])
 def search_movies():
     query = request.args.get('query', '').lower()
-    genres = request.args.getlist('genres')
+    # Filter out empty strings from genres list
+    genres = [g for g in request.args.get('genres', '').split(',') if g]
     language = request.args.get('language')
     country = request.args.get('country')
     page = int(request.args.get('page', 1))
     
+    print(f"Search request - Query: {query}, Genres: {genres}, Language: {language}, Country: {country}")
+    
     # Start with title search or all movies
     results = db.search_by_title(query) if query else MOVIES
+    print(f"Initial results count: {len(results)}")
 
     # Apply filters
     if genres:
         genre_results = db.recommend_by_genre(*genres)
         genre_titles = {movie['title'] for movie in genre_results}
         results = [movie for movie in results if movie['title'] in genre_titles]
+        print(f"After genre filter: {len(results)} movies")
 
     if language:
         language_results = db.recommend_by_language(language)
         language_titles = {movie['title'] for movie in language_results}
         results = [movie for movie in results if movie['title'] in language_titles]
+        print(f"After language filter: {len(results)} movies")
 
     if country:
         country_results = db.recommend_by_country(country)
         country_titles = {movie['title'] for movie in country_results}
         results = [movie for movie in results if movie['title'] in country_titles]
+        print(f"After country filter: {len(results)} movies")
 
     # Sort final results by rating
     results = sorted(results, key=lambda x: x['rating'], reverse=True)
@@ -111,8 +118,11 @@ def search_movies():
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
     
+    final_results = results[start_idx:end_idx]
+    print(f"Final results: {len(final_results)} movies (page {page})")
+    
     return jsonify({
-        'results': results[start_idx:end_idx],
+        'results': final_results,
         'total': len(results)
     })
 
