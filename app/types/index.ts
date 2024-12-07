@@ -6,6 +6,7 @@ export interface Movie {
   rating: number
   language: string[]
   country: string[]
+  overview: string
 }
 
 export interface SearchParams {

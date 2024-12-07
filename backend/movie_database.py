@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 class Movie(): #creating a movie class
-    def __init__(self, title, release_year, genres, vote_average, spoken_languages, production_countries):
+    def __init__(self, title, release_year, genres, vote_average, spoken_languages, production_countries, overview):
 
         self.title = title
         self.imageUrl = f"/api/poster/{title}"
@@ -11,6 +11,7 @@ class Movie(): #creating a movie class
         self.release_year = release_year
         self.language = self.parse_languages(spoken_languages)
         self.country = self.parse_countries(production_countries)
+        self.overview = overview
 
         #self.popularity = popularity
         #self.spoken_languages = spoken_languages
@@ -26,7 +27,8 @@ class Movie(): #creating a movie class
             'genres': self.genres,
             'rating': self.rating,
             'language': self.language,
-            'country': self.country
+            'country': self.country,
+            'overview': self.overview
         }
 
 
@@ -59,12 +61,15 @@ class MovieDatabase():
     def get_movie_data(self, df):
         movie_data = []
         for index, row in df.iterrows():
-            movie = Movie( title=row.get('title', 'Unknown Title'),
-                        release_year=row.get('release_year', 'Unknown Release Date'),
-                        genres=row.get('genres', "[]"),
-                        vote_average=row.get('vote_average', 0.0),
-                        spoken_languages=row.get('spoken_languages', "[]"),
-                        production_countries=row.get('production_countries', "[]"))
+            movie = Movie(
+                title=row.get('title', 'Unknown Title'),
+                release_year=row.get('release_year', 'Unknown Release Date'),
+                genres=row.get('genres', "[]"),
+                vote_average=row.get('vote_average', 0.0),
+                spoken_languages=row.get('spoken_languages', "[]"),
+                production_countries=row.get('production_countries', "[]"),
+                overview=row.get('overview', '')
+            )
             movie_data.append(movie)
         return movie_data
     
