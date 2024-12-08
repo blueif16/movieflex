@@ -2,8 +2,9 @@ import pandas as pd
 import os
 
 class Movie(): #creating a movie class
-    def __init__(self, title, release_year, genres, vote_average, spoken_languages, production_countries, overview):
-
+    def __init__(self, id, title, release_year, genres, vote_average, spoken_languages, production_countries, overview):
+        
+        self.id = id
         self.title = title
         self.imageUrl = f"/api/poster/{title}"
         self.genres = self.parse_genres(genres)
@@ -21,6 +22,7 @@ class Movie(): #creating a movie class
 
     def _to_dict(self):
         return {
+            'id': self.id,
             'title': self.title,
             'imageUrl': self.imageUrl,
             'release_year': self.release_year,
@@ -62,6 +64,7 @@ class MovieDatabase():
         movie_data = []
         for index, row in df.iterrows():
             movie = Movie(
+                id=row.get('id', 'Unknown ID'),
                 title=row.get('title', 'Unknown Title'),
                 release_year=row.get('release_year', 'Unknown Release Date'),
                 genres=row.get('genres', "[]"),

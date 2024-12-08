@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { Movie } from '@/app/types'
 import { cn } from '@/lib/utils'
+import { sendMovieQuestion, initializeMovieChat } from '@/app/lib/api'
 
 interface MovieDetailModalProps {
   movie: Movie
@@ -20,40 +21,92 @@ const DEMO_QUESTIONS = [
 
 export default function MovieDetailModal({ movie, isOpen, onClose }: MovieDetailModalProps) {
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isChatInitialized, setIsChatInitialized] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
   const [query, setQuery] = useState('')
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleChatSubmit = (e: React.FormEvent) => {
+  const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!query.trim()) return
+    if (!query.trim() || isLoading) return
 
-    // Add user message
-    setChatMessages(prev => [...prev, { role: 'user', content: query }])
-    
-    // Simulate AI response (replace with actual API call later)
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `This is a simulated response about ${movie.title}. The actual AI integration will be implemented later.`
-      }])
-    }, 1000)
-
-    setQuery('')
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      // Add user message immediately
+      setChatMessages(prev => [...prev, { role: 'user', content: query }])
+      
+      // Send to API and get response
+      const response = await sendMovieQuestion(movie.id, query)
+      
+      // Add assistant response
+      setChatMessages(prev => [...prev, response])
+      
+      // Clear input
+      setQuery('')
+    } catch (err) {
+      setError('Failed to get response. Please try again.')
+      console.error('Chat error:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleDemoQuestion = (question: string) => {
-    // Add user message
-    setChatMessages(prev => [...prev, { role: 'user', content: question }])
-    
-    // Simulate AI response
-    setTimeout(() => {
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `This is a simulated response about ${movie.title} for the question: "${question}". The actual AI integration will be implemented later.`
-      }])
-    }, 1000)
+  const handleDemoQuestion = async (question: string) => {
+    if (isLoading) return
 
-    setQuery('')
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      // Add user message immediately
+      setChatMessages(prev => [...prev, { role: 'user', content: question }])
+      
+      // Send to API and get response
+      const response = await sendMovieQuestion(movie.id, query)
+      
+      // Add assistant response
+      setChatMessages(prev => [...prev, response])
+      
+      // Clear input
+      setQuery('')
+    } catch (err) {
+      setError('Failed to get response. Please try again.')
+      console.error('Chat error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initialize chat when rating button is clicked
+  const handleChatToggle = async () => {
+    if (!isChatOpen && !isChatInitialized) {
+      try {
+        setIsInitializing(true)
+        setError(null)
+        await initializeMovieChat({
+          id: movie.id,
+          title: movie.title,
+          overview: movie.overview,
+          rating: movie.rating,
+          genres: movie.genres,
+          release_year: movie.release_year,
+          language: movie.language,
+          country: movie.country
+        })
+        setIsChatInitialized(true)
+      } catch (err) {
+        setError('Failed to initialize chat. Please try again.')
+        console.error('Chat initialization error:', err)
+        return
+      } finally {
+        setIsInitializing(false)
+      }
+    }
+    setIsChatOpen(prev => !prev)
   }
 
   if (!isOpen) return null
@@ -93,13 +146,18 @@ export default function MovieDetailModal({ movie, isOpen, onClose }: MovieDetail
                     {movie.title}
                   </h1>
                   <button 
-                    onClick={() => setIsChatOpen(prev => !prev)}
-                    className="flex items-center px-4 py-2 rounded hover:bg-gray-800/50 transition-colors"
+                    onClick={handleChatToggle}
+                    disabled={isInitializing}
+                    className="flex items-center px-4 py-2 rounded hover:bg-gray-800/50 transition-colors
+                      disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Star className="w-7 h-7 text-yellow-400 fill-yellow-400" />
                     <span className="text-yellow-400 ml-2 font-semibold text-2xl">
                       {movie.rating.toFixed(1)}
                     </span>
+                    {isInitializing && (
+                      <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-400" />
+                    )}
                   </button>
                 </div>
 
@@ -173,6 +231,20 @@ export default function MovieDetailModal({ movie, isOpen, onClose }: MovieDetail
                         </p>
                       </div>
                     ))}
+                    {isLoading && (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-pulse flex space-x-2">
+                          <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                          <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                          <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                        </div>
+                      </div>
+                    )}
+                    {error && (
+                      <div className="text-red-400 text-center text-sm py-2">
+                        {error}
+                      </div>
+                    )}
                   </div>
 
                   {/* Search/Input Area */}
@@ -187,10 +259,12 @@ export default function MovieDetailModal({ movie, isOpen, onClose }: MovieDetail
                           <button
                             key={index}
                             type="button"
+                            disabled={isLoading}
                             onClick={() => handleDemoQuestion(question)}
                             className="text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 
                               transition-all border border-white/10 text-white/80
-                              text-sm font-light backdrop-blur-sm"
+                              text-sm font-light backdrop-blur-sm disabled:opacity-50
+                              disabled:cursor-not-allowed"
                           >
                             {question}
                           </button>
@@ -201,18 +275,22 @@ export default function MovieDetailModal({ movie, isOpen, onClose }: MovieDetail
                           type="text"
                           value={query}
                           onChange={(e) => setQuery(e.target.value)}
+                          disabled={isLoading}
                           placeholder="Type your question..."
                           className="flex-1 bg-white/5 text-white/90 rounded-2xl px-6 py-4 
                             focus:outline-none focus:ring-2 focus:ring-white/20 
                             placeholder:text-white/40 font-light text-[15px]
                             border border-white/10 backdrop-blur-sm transition-all
-                            hover:bg-white/10"
+                            hover:bg-white/10 disabled:opacity-50
+                            disabled:cursor-not-allowed"
                         />
                         <button
                           type="submit"
+                          disabled={isLoading || !query.trim()}
                           className="bg-white/5 text-white/90 rounded-full p-4
                             hover:bg-white/10 transition-all border border-white/10
-                            focus:outline-none focus:ring-2 focus:ring-white/20"
+                            focus:outline-none focus:ring-2 focus:ring-white/20
+                            disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Send className="w-5 h-5" />
                         </button>

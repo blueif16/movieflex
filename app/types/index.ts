@@ -1,4 +1,5 @@
 export interface Movie {
+  id: string
   title: string
   imageUrl: string
   release_year: string

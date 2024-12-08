@@ -1,7 +1,8 @@
 import { API_CONFIG } from '../config'
-import { SearchParams, SearchResponse, GenreResponse, LanguageResponse, CountryResponse, MoviesResponse } from '../types'
+import { SearchParams, SearchResponse, GenreResponse, LanguageResponse, CountryResponse, MoviesResponse, Movie } from '../types'
 
 const API_BASE_URL = API_CONFIG.BASE_URL
+const CHAT_API_URL = 'http://172.19.183.186:5001'
 
 async function fetchWithErrorHandling<T>(url: string, options?: RequestInit): Promise<T> {
   try {
@@ -88,4 +89,44 @@ export async function getMoviesByGenre(genre: string): Promise<MoviesResponse> {
     console.error('Failed to fetch genre movies:', error)
     return { movies: [] }
   }
+}
+
+export async function initializeMovieChat(movie: Movie) {
+  const response = await fetch(`${CHAT_API_URL}/api/chat/initialize`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      movie: {
+        ...movie,
+        imageUrl: undefined
+      }
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to initialize chat')
+  }
+
+  return response.json()
+}
+
+export async function sendMovieQuestion(movieId: string, question: string) {
+  const response = await fetch(`${CHAT_API_URL}/api/chat/query`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      movieId,
+      question,
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to send message')
+  }
+
+  return response.json()
 } 

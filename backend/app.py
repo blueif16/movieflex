@@ -4,6 +4,8 @@ import os
 import glob
 from crawl import get_movie_poster, sanitize_filename
 from movie_database import MovieDatabase
+import json
+from typing import List, Dict
 
 app = Flask(__name__)
 
@@ -38,77 +40,32 @@ def health_check():
         'genres_loaded': bool(GENRES)
     })
 
-def find_poster(movie_title: str) -> str:
-    """Find poster file path for a given movie title"""
-    try:
-        sanitized_title = sanitize_filename(movie_title)
-        poster_pattern = os.path.join(posters_dir, f"{sanitized_title}_*.png")
-        matching_files = glob.glob(poster_pattern)
-        
-        print(f"Searching for poster: {poster_pattern}")  # Debug log
-        print(f"Found files: {matching_files}")  # Debug log
-        
-        if matching_files:
-            return matching_files[0]
-        return None
-    except Exception as e:
-        print(f"Error finding poster: {str(e)}")  # Debug log
-        return None
-
-@app.route('/api/poster/<path:movie_title>')
-def get_movie_poster_image(movie_title):
-    try:
-        print(f"Requesting poster for: {movie_title}")  # Debug log
-        
-        poster_path = find_poster(movie_title)
-        if not poster_path:
-            print(f"Poster not found, fetching from TMDB...")  # Debug log
-            get_movie_poster(movie_title)
-            poster_path = find_poster(movie_title)
-        
-        if not poster_path:
-            print(f"Failed to get poster for: {movie_title}")  # Debug log
-            return jsonify({'error': 'Poster not found'}), 404
-        
-        print(f"Serving poster from: {poster_path}")  # Debug log
-        return send_file(poster_path, mimetype='image/png')
-    except Exception as e:
-        print(f"Error serving poster: {str(e)}")  # Debug log
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/search', methods=['GET'])
 def search_movies():
     query = request.args.get('query', '').lower()
-    # Filter out empty strings from genres list
     genres = [g for g in request.args.get('genres', '').split(',') if g]
     language = request.args.get('language')
     country = request.args.get('country')
     page = int(request.args.get('page', 1))
     
-    print(f"Search request - Query: {query}, Genres: {genres}, Language: {language}, Country: {country}")
-    
     # Start with title search or all movies
     results = db.search_by_title(query) if query else MOVIES
-    print(f"Initial results count: {len(results)}")
-
+    
     # Apply filters
     if genres:
         genre_results = db.recommend_by_genre(*genres)
         genre_titles = {movie['title'] for movie in genre_results}
         results = [movie for movie in results if movie['title'] in genre_titles]
-        print(f"After genre filter: {len(results)} movies")
 
     if language:
         language_results = db.recommend_by_language(language)
         language_titles = {movie['title'] for movie in language_results}
         results = [movie for movie in results if movie['title'] in language_titles]
-        print(f"After language filter: {len(results)} movies")
 
     if country:
         country_results = db.recommend_by_country(country)
         country_titles = {movie['title'] for movie in country_results}
         results = [movie for movie in results if movie['title'] in country_titles]
-        print(f"After country filter: {len(results)} movies")
 
     # Sort final results by rating
     results = sorted(results, key=lambda x: x['rating'], reverse=True)
@@ -118,11 +75,8 @@ def search_movies():
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
     
-    final_results = results[start_idx:end_idx]
-    print(f"Final results: {len(final_results)} movies (page {page})")
-    
     return jsonify({
-        'results': final_results,
+        'results': results[start_idx:end_idx],
         'total': len(results)
     })
 
@@ -140,13 +94,48 @@ def get_countries():
 
 @app.route('/api/movies/top-rated', methods=['GET'])
 def get_top_rated():
-    sorted_movies = db.sort_by_rating(MOVIES)
+    sorted_movies = sorted(MOVIES, key=lambda x: x['rating'], reverse=True)
     return jsonify({'movies': sorted_movies})
 
 @app.route('/api/movies/by-genre/<genre>', methods=['GET'])
 def get_movies_by_genre(genre):
     movies = db.recommend_by_genre(genre)
     return jsonify({'movies': movies})
+
+@app.route('/api/poster/<path:movie_title>')
+def get_movie_poster_image(movie_title):
+    try:
+        print(f"Requesting poster for: {movie_title}")
+        
+        poster_path = find_poster(movie_title)
+        if not poster_path:
+            print(f"Poster not found, fetching from TMDB...")
+            get_movie_poster(movie_title)
+            poster_path = find_poster(movie_title)
+        
+        if not poster_path:
+            print(f"Failed to get poster for: {movie_title}")
+            return jsonify({'error': 'Poster not found'}), 404
+        
+        print(f"Serving poster from: {poster_path}")
+        return send_file(poster_path, mimetype='image/png')
+    except Exception as e:
+        print(f"Error serving poster: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+def find_poster(movie_title: str) -> str:
+    """Find poster file path for a given movie title"""
+    try:
+        sanitized_title = sanitize_filename(movie_title)
+        poster_pattern = os.path.join(posters_dir, f"{sanitized_title}_*.png")
+        matching_files = glob.glob(poster_pattern)
+        
+        if matching_files:
+            return matching_files[0]
+        return None
+    except Exception as e:
+        print(f"Error finding poster: {str(e)}")
+        return None
 
 @app.after_request
 def after_request(response):
@@ -156,6 +145,6 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
-    print(f"Database path: {db_path}")  # Debug log
-    print(f"Posters directory: {posters_dir}")  # Debug log
+    print(f"Database path: {db_path}")
+    print(f"Posters directory: {posters_dir}")
     app.run(host='0.0.0.0', port=5000, debug=True) 
