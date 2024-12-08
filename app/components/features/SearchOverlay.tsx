@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 import { searchMovies, getGenres, getLanguages, getCountries } from '@/app/lib/api'
 import { Movie } from '@/app/types'
 import MovieThumbnail from './MovieThumbnail'
+import Image from 'next/image'
+import MovieDetailModal from './MovieDetailModal'
 
 interface SearchOverlayProps {
   isOpen: boolean
@@ -22,6 +24,8 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const [results, setResults] = useState<Movie[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   useEffect(() => {
     const loadFilters = async () => {
@@ -195,42 +199,98 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
           {/* Results Section */}
           {isLoading ? (
             <div className="text-center text-white py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-              <p className="mt-4">Searching...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/20 mx-auto"></div>
+              <p className="mt-4 text-white/70">Searching...</p>
             </div>
           ) : results.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {results.map((movie) => (
                 <div 
                   key={movie.title}
-                  className="flex items-center justify-between bg-gray-900 p-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setSelectedMovie(movie)
+                    setIsDetailModalOpen(true)
+                  }}
+                  className="group relative flex items-center gap-6 bg-white/5 backdrop-blur-sm 
+                    p-6 rounded-2xl border border-white/10 hover:bg-white/10 
+                    transition-all duration-300 cursor-pointer"
                 >
-                  <div>
-                    <h3 className="text-white font-semibold">{movie.title}</h3>
-                    <div className="flex items-center mt-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <span className="text-yellow-400 ml-1">{movie.rating.toFixed(1)}</span>
-                      <span className="text-gray-400 ml-2">
-                        {movie.genres.slice(0, 3).join(', ')}
+                  {/* Movie Poster */}
+                  <div className="relative h-24 w-20 md:h-32 md:w-24 flex-shrink-0 overflow-hidden rounded-xl">
+                    <Image
+                      src={movie.imageUrl}
+                      alt={movie.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 80px, 96px"
+                    />
+                  </div>
+
+                  {/* Movie Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-x-4">
+                      <h3 className="text-lg md:text-xl font-semibold text-white/90 truncate">
+                        {movie.title}
+                      </h3>
+                      <span className="text-white/60 text-sm whitespace-nowrap">
+                        {movie.release_year}
                       </span>
                     </div>
-                    <div className="text-gray-400 text-sm mt-1">
-                      {movie.language[0]} • {movie.country[0]}
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center bg-white/10 px-2.5 py-1 rounded-full">
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <span className="text-yellow-400 ml-1.5 font-medium">
+                          {movie.rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <span className="text-white/40">•</span>
+                      <div className="flex flex-wrap gap-2">
+                        {movie.genres.slice(0, 3).map(genre => (
+                          <span 
+                            key={genre} 
+                            className="bg-white/5 text-white/70 px-3 py-1 rounded-full text-sm"
+                          >
+                            {genre}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3 text-sm text-white/50">
+                      <span>{movie.language[0]}</span>
+                      <span>•</span>
+                      <span>{movie.country[0]}</span>
                     </div>
                   </div>
-                  <span className="text-gray-400 text-sm">
-                    {movie.release_year}
-                  </span>
+
+                  {/* Hover Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 
+                    rounded-2xl pointer-events-none" 
+                  />
                 </div>
               ))}
             </div>
           ) : query || selectedGenres.length > 0 || selectedLanguage || selectedCountry ? (
-            <div className="text-center text-gray-400 py-12">
-              No movies found matching your search criteria
+            <div className="text-center text-white/60 py-12 bg-white/5 rounded-2xl backdrop-blur-sm">
+              <p className="text-lg">No movies found matching your search criteria</p>
             </div>
           ) : null}
         </div>
       </div>
+
+      {/* Movie Detail Modal */}
+      {selectedMovie && (
+        <MovieDetailModal
+          movie={selectedMovie}
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false)
+            setSelectedMovie(null)
+          }}
+        />
+      )}
 
       {/* Error Display */}
       {error && (
