@@ -1,12 +1,23 @@
 import { API_CONFIG } from '../config'
 import { SearchParams, SearchResponse, GenreResponse, LanguageResponse, CountryResponse, MoviesResponse, Movie } from '../types'
 
-const API_BASE_URL = API_CONFIG.BASE_URL
-const CHAT_API_URL = 'http://172.19.183.186:5001'
+// Use relative paths since we're proxying through Next.js
+const API_BASE_URL = '/api'
+const CHAT_API_URL = '/llm'
 
 async function fetchWithErrorHandling<T>(url: string, options?: RequestInit): Promise<T> {
   try {
-    const response = await fetch(url, options)
+    // Don't try to use window.location in server components
+    const response = await fetch(url, {
+      ...options,
+      // Add these headers for server-side fetching
+      headers: {
+        ...options?.headers,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`)
     }
@@ -75,7 +86,10 @@ export async function searchMovies(params: SearchParams): Promise<SearchResponse
 
 export async function getTopRatedMovies(): Promise<MoviesResponse> {
   try {
-    return await fetchWithErrorHandling<MoviesResponse>(`${API_BASE_URL}/movies/top-rated`)
+    console.log('Fetching top rated movies from:', `${API_BASE_URL}/movies/top-rated`)
+    const data = await fetchWithErrorHandling<MoviesResponse>(`${API_BASE_URL}/movies/top-rated`)
+    console.log('Top rated movies response:', data)
+    return data
   } catch (error) {
     console.error('Failed to fetch top rated movies:', error)
     return { movies: [] }
@@ -84,7 +98,10 @@ export async function getTopRatedMovies(): Promise<MoviesResponse> {
 
 export async function getMoviesByGenre(genre: string): Promise<MoviesResponse> {
   try {
-    return await fetchWithErrorHandling<MoviesResponse>(`${API_BASE_URL}/movies/by-genre/${genre}`)
+    console.log('Fetching movies for genre:', genre)
+    const data = await fetchWithErrorHandling<MoviesResponse>(`${API_BASE_URL}/movies/by-genre/${genre}`)
+    console.log('Genre movies response:', data)
+    return data
   } catch (error) {
     console.error('Failed to fetch genre movies:', error)
     return { movies: [] }
@@ -92,7 +109,7 @@ export async function getMoviesByGenre(genre: string): Promise<MoviesResponse> {
 }
 
 export async function initializeMovieChat(movie: Movie) {
-  const response = await fetch(`${CHAT_API_URL}/api/chat/initialize`, {
+  const response = await fetch(`${CHAT_API_URL}/initialize`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -113,7 +130,7 @@ export async function initializeMovieChat(movie: Movie) {
 }
 
 export async function sendMovieQuestion(movieId: string, question: string) {
-  const response = await fetch(`${CHAT_API_URL}/api/chat/query`, {
+  const response = await fetch(`${CHAT_API_URL}/query`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -11,24 +11,18 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    console.log(`http://${process.env.NEXT_PUBLIC_API_HOST}:${process.env.NEXT_PUBLIC_API_PORT}/api/:path*`)
     return [
       {
+        // Main API endpoints
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: `http://${process.env.NEXT_PUBLIC_API_HOST}:${process.env.NEXT_PUBLIC_API_PORT}/api/:path*`,
       },
-    ]
-  },
-  async headers() {
-    return [
       {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "frame-src 'self' https://www.youtube.com",
-          },
-        ],
-      },
+        // Chat API endpoints
+        source: '/llm/:path*',
+        destination: `http://${process.env.NEXT_PUBLIC_CHAT_API_HOST}:${process.env.NEXT_PUBLIC_CHAT_API_PORT}/llm/:path*`,
+      }
     ]
   },
 };

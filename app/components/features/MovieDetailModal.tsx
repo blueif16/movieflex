@@ -215,18 +215,19 @@ export default function MovieDetailModal({ movie, isOpen, onClose }: MovieDetail
               <div className="bg-gray-900/30 backdrop-blur-sm rounded-2xl h-full p-6 border border-white/10">
                 <div className="flex flex-col h-[calc(100vh-8rem)]">
                   {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto mb-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent pr-4">
+                  <div className="flex-1 overflow-y-auto mb-4 space-y-6 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent pr-4">
                     {chatMessages.map((message, index) => (
                       <div 
                         key={index}
                         className={cn(
-                          "p-4 rounded-2xl max-w-[80%] backdrop-blur-sm",
+                          "p-5 rounded-2xl max-w-[80%] backdrop-blur-sm",
                           message.role === 'user' 
                             ? "bg-white/10 ml-auto border border-white/10" 
                             : "bg-black/30 border border-white/5"
                         )}
                       >
-                        <p className="text-white/90 text-[15px] leading-relaxed font-light">
+                        <p className="text-gray-300 text-base leading-loose font-light
+                          tracking-wide whitespace-pre-wrap break-words">
                           {message.content}
                         </p>
                       </div>

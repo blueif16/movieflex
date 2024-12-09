@@ -15,6 +15,8 @@ export default function MovieThumbnail(props: MovieThumbnailProps) {
 
   const { imageUrl, title, genres, rating, release_year } = props
 
+  console.log('Loading thumbnail for:', title, 'Image URL:', imageUrl)
+
   return (
     <>
       <div 

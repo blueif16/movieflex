@@ -11,6 +11,8 @@ interface ContentRowProps {
 }
 
 export default function ContentRow({ title, movies }: ContentRowProps) {
+  console.log(`Rendering ContentRow for ${title} with ${movies.length} movies`)
+  
   const rowRef = useRef<HTMLDivElement>(null)
   const [isMoved, setIsMoved] = useState(false)
 
@@ -30,7 +32,7 @@ export default function ContentRow({ title, movies }: ContentRowProps) {
   return (
     <div className="space-y-2 md:space-y-4">
       <h2 className="cursor-pointer text-xl font-bold text-white transition duration-200 hover:text-gray-300 md:text-2xl pl-4">
-        {title}
+        {title} ({movies.length})
       </h2>
 
       <div className="group relative md:-ml-2">

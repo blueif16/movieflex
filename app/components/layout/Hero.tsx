@@ -12,7 +12,7 @@ export default function Hero() {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.pause()
-      videoRef.current.currentTime = 0
+      videoRef.current.currentTime = 1
       videoRef.current.muted = true
     }
   }, [])
