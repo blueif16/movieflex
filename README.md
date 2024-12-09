@@ -43,27 +43,27 @@ A Netflix-inspired movie discovery platform built with Next.js and Flask, allowi
 ## Installation Guide
 
 ### 1. Clone the Repository
-\`\`\`bash
+```bash
 git clone <repository-url>
 cd movieflex
-\`\`\`
+```
 
 ### 2. Install Frontend Dependencies
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 ### 3. Install Backend Dependencies
-\`\`\`bash
+```bash
 cd backend
-pip install flask flask-cors pandas requests
-\`\`\`
+pip install -r requirements.txt
+```
 
 ### 4. Set Environment Variables
 Create a \`.env.local\` file in the project root and add the following:
-\`\`\`bash
+```bash
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
-\`\`\`
+```
 
 ### 5. Update TMDb API Key
 Open \`backend/crawl.py\` and replace the \`API_KEY\` value with your TMDb API key.
@@ -73,41 +73,41 @@ Open \`backend/crawl.py\` and replace the \`API_KEY\` value with your TMDb API k
 ## Database and Media Setup
 
 ### 1. Create Required Directories
-\`\`\`bash
+```bash
 mkdir -p movieflex/backend/posters
 mkdir -p movieflex/public/videos
-\`\`\`
+```
 
 ### 2. Add Your Movie Database File
 Copy your movie database file to the backend folder:
-\`\`\`bash
+```bash
 cp path/to/your/imdb_movies-1.csv movieflex/backend/
-\`\`\`
+```
 
 ### 3. Add a Hero Video
 Copy your hero trailer video to the public folder:
-\`\`\`bash
+```bash
 cp path/to/your/trailer.mp4 movieflex/public/videos/hero-trailer.mp4
-\`\`\`
+```
 
 ---
 
 ## Running the Application
 
 ### 1. Start the Flask Backend
-\`\`\`bash
+```bash
 cd backend
 python app.py
-\`\`\`
-The backend will run on \`http://localhost:5000\`.
+```
+The backend will run on <http://localhost:5000>.
 
 ### 2. Start the Next.js Frontend
 Open a new terminal:
-\`\`\`bash
+```bash
 cd movieflex
 npm run dev
-\`\`\`
-The frontend will run on \`http://localhost:3000\`.
+```
+The frontend will run on <http://localhost:3000>.
 
 ---
 
@@ -119,7 +119,7 @@ The frontend will run on \`http://localhost:3000\`.
    - Verify Flask server is running on port 5000.
    - Check CORS settings in \`backend/app.py\`.
    - Confirm \`NEXT_PUBLIC_API_URL\` is correctly set in the frontend.
-   - Test health endpoint: \`http://localhost:5000/api/health\`.
+   - Test health endpoint: <http://localhost:5000/api/health>.
 
 2. **Database Issues**
    - Ensure the database file exists and is readable.
@@ -158,15 +158,15 @@ The frontend will run on \`http://localhost:3000\`.
 
 #### Mac Users
 1. Run the environment check script:
-   \`\`\`bash
+   ```bash
    chmod +x scripts/check-env.sh
    ./scripts/check-env.sh
-   \`\`\`
+   ```
 
 2. Set proper permissions:
-   \`\`\`bash
+   ```bash
    chmod -R 755 backend/posters
-   \`\`\`
+   ```
 
 #### Windows Users
 - Add Python to the system \`PATH\`.
