@@ -84,13 +84,14 @@ def search_movies():
     language = request.args.get('language')
     country = request.args.get('country')
     page = int(request.args.get('page', 1))
+    sort_by = request.args.get('sort_by', 'rating').lower()
     
     print(f"Search request - Query: {query}, Genres: {genres}, Language: {language}, Country: {country}")
     
     # Start with title search or all movies
-    results = db.search_by_title(query) if query else MOVIES
+    results = db.search_by_title(query.strip()) if query.strip() else MOVIES
     print(f"Initial results count: {len(results)}")
-
+    
     # Apply filters
     if genres:
         genre_results = db.recommend_by_genre(*genres)
@@ -110,8 +111,8 @@ def search_movies():
         results = [movie for movie in results if movie['title'] in country_titles]
         print(f"After country filter: {len(results)} movies")
 
-    # Sort final results by rating
-    results = sorted(results, key=lambda x: x['rating'], reverse=True)
+    # Sort final results by rating or popularity (Field validated in the front-end)
+    results = sorted(results, key=lambda x: x[sort_by], reverse=True)
     
     # Pagination
     per_page = 20

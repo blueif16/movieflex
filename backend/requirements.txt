@@ -1,0 +1,5 @@
+rapidfuzz
+pandas
+flask
+flask-cors
+requests

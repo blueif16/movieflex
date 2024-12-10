@@ -1,8 +1,10 @@
 import pandas as pd
 import os
+from rapidfuzz import fuzz
+from rapidfuzz import process
 
 class Movie(): #creating a movie class
-    def __init__(self, id, title, release_year, genres, vote_average, spoken_languages, production_countries, overview):
+    def __init__(self, id, title, release_year, genres, vote_average, spoken_languages, production_countries, overview, popularity):
         
         self.id = id
         self.title = title
@@ -13,6 +15,7 @@ class Movie(): #creating a movie class
         self.language = self.parse_languages(spoken_languages)
         self.country = self.parse_countries(production_countries)
         self.overview = overview
+        self.popularity = popularity
 
         #self.popularity = popularity
         #self.spoken_languages = spoken_languages
@@ -30,7 +33,8 @@ class Movie(): #creating a movie class
             'rating': self.rating,
             'language': self.language,
             'country': self.country,
-            'overview': self.overview
+            'overview': self.overview,
+            'popularity': self.popularity
         }
 
 
@@ -71,7 +75,8 @@ class MovieDatabase():
                 vote_average=row.get('vote_average', 0.0),
                 spoken_languages=row.get('spoken_languages', "[]"),
                 production_countries=row.get('production_countries', "[]"),
-                overview=row.get('overview', '')
+                overview=row.get('overview', ''),
+                popularity=round(row.get('popularity', 0.0), 2)
             )
             movie_data.append(movie)
         return movie_data
@@ -89,8 +94,15 @@ class MovieDatabase():
         return self.sort_by_rating(movies)
 
     def search_by_title(self, title):
-
-        return [movie._to_dict() for movie in self.movie_data if title.lower() in movie.title.lower()]
+        matches = []
+        for movie in self.movie_data:
+            similarity_score = fuzz.partial_ratio(title.lower(), movie.title.lower())
+            if similarity_score >= 90:  # Threshold for similarity (e.g., 70%)
+                matches.append((movie._to_dict(), similarity_score))
+        
+        # Sort matches by similarity score
+        matches = sorted(matches, key=lambda x: x[1], reverse=True)
+        return [row[0] for row in matches]
 
     def recommend_by_genre(self, *genres):
         """
